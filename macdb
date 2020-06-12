@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby
+
+require 'mongo'
+require 'optparse'
+require 'resolv'
+
+def mac_address?(s)
+  return /\A(?:[[:xdigit:]]{2}:){5}[[:xdigit:]]{2}\Z/.match(s)
+end
+
+def print_documents(documents)
+  documents.each do |document|
+    message = sprintf('%-10s  %-17s  %-15s', document[:Name], document[:MAC_Address], document[:IP_Address])
+    puts message
+  end
+end
+
+def list(collection)
+  documents = collection.find(nil, { sort: { Name: 1 } })
+  print_documents(documents)
+end
+
+def search(collection, s)
+  if s =~ Resolv::IPv4::Regex
+    filter = { IP_Address: s }
+  elsif mac_address?(s)
+    filter = { MAC_Address: s }
+  else
+    filter = { Name: s }
+  end
+
+  documents = collection.find(filter, { sort: { Name: 1 } })
+  print_documents(documents)
+end
+
+def add(collection, name, mac_address, ip_address = nil)
+  document = { Name: name, MAC_Address: mac_address }
+  unless ip_address.nil?
+    document.store(:IP_Address, ip_address)
+  end
+
+  collection.insert_one(document)
+end
+
+def delete(collection, s)
+  if s =~ Resolv::IPv4::Regex
+    filter = { IP_Address: s }
+  elsif mac_address?(s)
+    filter = { MAC_Address: s }
+  else
+    filter = { Name: s }
+  end
+
+  collection.find_one_and_delete(filter)
+end
+
+opts = ARGV.getopts('c:s:')
+connection_string = opts['s']
+collection_name = opts['c']
+if connection_string.nil? or collection_name.nil?
+  STDERR.puts 'options must be specified'
+  exit 1
+end
+
+Mongo::Logger.logger = Logger.new(STDERR)
+Mongo::Logger.level = Logger::INFO
+
+client = Mongo::Client.new(connection_string)
+collection = Mongo::Collection.new(client.database, collection_name)
+
+command = ARGV.shift
+case command
+when nil, 'l', 'list'
+  list(collection)
+when 's', 'search'
+  search(collection, *ARGV)
+when 'a', 'add'
+  add(collection, *ARGV)
+when 'd', 'delete'
+  delete(collection, *ARGV)
+else
+  search(collection, command)
+end
+
+client.close
+
+exit 0
