@@ -54,6 +54,18 @@ def delete(collection, s)
   collection.find_one_and_delete(filter)
 end
 
+def update(collection, name, s)
+  if s =~ Resolv::IPv4::Regex
+    update = { IP_Address: s }
+  elsif mac_address?(s)
+    update = { MAC_Address: s }
+  else
+    update = { Name: s }
+  end
+
+  collection.find_one_and_update({ Name: name }, { '$set' => update })
+end
+
 opts = ARGV.getopts('c:s:')
 connection_string = opts['s']
 collection_name = opts['c']
@@ -78,6 +90,8 @@ when 'a', 'add'
   add(collection, *ARGV)
 when 'd', 'delete'
   delete(collection, *ARGV)
+when 'u', 'update'
+  update(collection, *ARGV)
 else
   search(collection, command)
 end
