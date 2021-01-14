@@ -66,19 +66,17 @@ def update(collection, name, s)
   collection.find_one_and_update({ Name: name }, { '$set' => update })
 end
 
-opts = ARGV.getopts('c:s:')
-connection_string = opts['s']
-collection_name = opts['c']
-if connection_string.nil? or collection_name.nil?
-  STDERR.puts 'options must be specified'
-  exit 1
-end
+opts = ARGV.getopts('h:P:u:p:')
+host = opts['h'] ? opts['h'] : 'localhost'
+port = opts['P'] ? opts['P'] : '27017'
+user = opts['u']
+pass = opts['p']
 
 Mongo::Logger.logger = Logger.new(STDERR)
 Mongo::Logger.level = Logger::INFO
 
-client = Mongo::Client.new(connection_string)
-collection = Mongo::Collection.new(client.database, collection_name)
+client = Mongo::Client.new([ host + ':' + port ], :user => user, :password => pass, :database => 'hostinfo')
+collection = Mongo::Collection.new(client.database, 'mac')
 
 command = ARGV.shift
 case command
