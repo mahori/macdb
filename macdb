@@ -20,16 +20,24 @@ def list(collection)
   print_documents(documents)
 end
 
-def search(collection, s)
-  if s =~ Resolv::IPv4::Regex
-    filter = { :IP_Address => s }
-  elsif mac_address?(s)
-    filter = { :MAC_Address => s }
-  else
-    filter = { :Name => s }
+def search(collection, *a)
+  documents = []
+
+  a.each do |s|
+    if s =~ Resolv::IPv4::Regex
+      filter = { :IP_Address => s }
+    elsif mac_address?(s)
+      filter = { :MAC_Address => s }
+    else
+      filter = { :Name => s }
+    end
+
+    docs = collection.find(filter, { :sort => { :Name => 1 } })
+    docs.each do |doc|
+      documents.push(doc)
+    end
   end
 
-  documents = collection.find(filter, { :sort => { :Name => 1 } })
   print_documents(documents)
 end
 
