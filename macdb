@@ -16,25 +16,25 @@ def print_documents(documents)
 end
 
 def list(collection)
-  documents = collection.find(nil, { sort: { Name: 1 } })
+  documents = collection.find(nil, { :sort => { :Name => 1 } })
   print_documents(documents)
 end
 
 def search(collection, s)
   if s =~ Resolv::IPv4::Regex
-    filter = { IP_Address: s }
+    filter = { :IP_Address => s }
   elsif mac_address?(s)
-    filter = { MAC_Address: s }
+    filter = { :MAC_Address => s }
   else
-    filter = { Name: s }
+    filter = { :Name => s }
   end
 
-  documents = collection.find(filter, { sort: { Name: 1 } })
+  documents = collection.find(filter, { :sort => { :Name => 1 } })
   print_documents(documents)
 end
 
 def add(collection, name, mac_address, ip_address = nil)
-  document = { Name: name, MAC_Address: mac_address }
+  document = { :Name => name, :MAC_Address => mac_address }
   unless ip_address.nil?
     document.store(:IP_Address, ip_address)
   end
@@ -44,11 +44,11 @@ end
 
 def delete(collection, s)
   if s =~ Resolv::IPv4::Regex
-    filter = { IP_Address: s }
+    filter = { :IP_Address => s }
   elsif mac_address?(s)
-    filter = { MAC_Address: s }
+    filter = { :MAC_Address => s }
   else
-    filter = { Name: s }
+    filter = { :Name => s }
   end
 
   collection.find_one_and_delete(filter)
@@ -56,14 +56,14 @@ end
 
 def update(collection, name, s)
   if s =~ Resolv::IPv4::Regex
-    update = { IP_Address: s }
+    update = { :IP_Address => s }
   elsif mac_address?(s)
-    update = { MAC_Address: s }
+    update = { :MAC_Address => s }
   else
-    update = { Name: s }
+    update = { :Name => s }
   end
 
-  collection.find_one_and_update({ Name: name }, { '$set' => update })
+  collection.find_one_and_update({ :Name => name }, { '$set' => update })
 end
 
 opts = ARGV.getopts('h:P:u:p:')
@@ -91,7 +91,8 @@ when 'd', 'delete'
 when 'u', 'update'
   update(collection, *ARGV)
 else
-  search(collection, command)
+  ARGV.unshift(command)
+  search(collection, *ARGV)
 end
 
 client.close
