@@ -50,16 +50,18 @@ def add(collection, name, mac_address, ip_address = nil)
   collection.insert_one(document)
 end
 
-def delete(collection, s)
-  if s =~ Resolv::IPv4::Regex
-    filter = { :IP_Address => s }
-  elsif mac_address?(s)
-    filter = { :MAC_Address => s }
-  else
-    filter = { :Name => s }
-  end
+def delete(collection, *a)
+  a.each do |s|
+    if s =~ Resolv::IPv4::Regex
+      filter = { :IP_Address => s }
+    elsif mac_address?(s)
+      filter = { :MAC_Address => s }
+    else
+      filter = { :Name => s }
+    end
 
-  collection.find_one_and_delete(filter)
+    collection.find_one_and_delete(filter)
+  end
 end
 
 def update(collection, name, s)
