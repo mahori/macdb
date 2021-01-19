@@ -10,7 +10,7 @@ end
 
 def print_documents(documents)
   documents.each do |document|
-    message = sprintf('%-15s  %-17s  %-15s', document[:Name], document[:MAC_Address], document[:IP_Address])
+    message = sprintf('%-17s  %-17s  %-15s', document[:Name], document[:MAC_Address], document[:IP_Address])
     puts message
   end
 end
