@@ -82,10 +82,16 @@ port = opts['P'] ? opts['P'] : '27017'
 user = opts['u']
 pass = opts['p']
 
+if user.nil? or pass.nil?
+  uri = sprintf('mongodb://%s:%s/hostinfo', host, port)
+else
+  uri = sprintf('mongodb://%s:%s@%s:%s/hostinfo', user, pass, host, port)
+end
+
 Mongo::Logger.logger = Logger.new(STDERR)
 Mongo::Logger.level = Logger::INFO
 
-client = Mongo::Client.new([ host + ':' + port ], :user => user, :password => pass, :database => 'hostinfo')
+client = Mongo::Client.new(uri)
 collection = Mongo::Collection.new(client.database, 'mac')
 
 command = ARGV.shift
